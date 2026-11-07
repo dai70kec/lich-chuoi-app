@@ -1,12 +1,1 @@
-{
-  "background_color": "#ffffff",
-  "description": "lich-chuoi-app",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "lịch riêng",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "lịch",
-  "start_url": "/",
-  "theme_color": "#ffffff"
-}
+
