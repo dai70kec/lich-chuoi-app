@@ -1,0 +1,12 @@
+{
+  "background_color": "#ffffff",
+  "description": "lich-chuoi-app",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Lich Thoi Khoa Bieu",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Lich",
+  "start_url": "/",
+  "theme_color": "#ffffff"
+}
