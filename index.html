@@ -3,211 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch Âm Dương & Chuỗi Kỷ Luật (Có Minh Chứng Ảnh)</title>
+    <title>Lich</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" href="./icon-192.png">
-    <meta name="theme-color" content="#db2777">
-    <!-- Thư viện lịch Âm -->
-    <script src="https://cdn.jsdelivr.net/npm/lunar-calendar@1.0.2/lib/lunar-calendar.min.js"></script>
+    <meta name="theme-color" content="#000000">
     <style>
-        :root {
-            --primary-pink: #db2777;
-            --light-pink: #fbcfe8;
-            --soft-pink: #fdf2f8;
-            --dark-pink: #9d174d;
-            --accent-rose: #f43f5e;
-            --text-main: #374151;
-            --bg-body: #fff1f2;
-        }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-body); color: var(--text-main); padding: 16px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 680px; background: #ffffff; padding: 24px; border-radius: 20px; box-shadow: 0 10px 25px rgba(219, 39, 119, 0.1); border: 1px solid var(--light-pink); }
+        body { background-color: #f4f6f8; color: #333; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 600px; background: #ffffff; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h1 { font-size: 24px; margin-bottom: 8px; color: #1a1a1a; text-align: center; }
+        .subtitle { font-size: 14px; color: #666; text-align: center; margin-bottom: 24px; }
         
-        h1 { font-size: 24px; margin-bottom: 4px; color: var(--dark-pink); text-align: center; font-weight: 700; }
-        .subtitle { font-size: 13px; color: #6b7280; text-align: center; margin-bottom: 20px; }
-
-        /* Navigation tabs */
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: var(--soft-pink); padding: 4px; border-radius: 12px; }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-weight: 600; color: var(--text-main); cursor: pointer; transition: 0.2s; font-size: 13px; }
-        .tab-btn.active { background: var(--primary-pink); color: white; box-shadow: 0 4px 10px rgba(219, 39, 119, 0.3); }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        /* Calendar Card */
-        .calendar-card { background: linear-gradient(135deg, var(--primary-pink), var(--dark-pink)); color: white; padding: 20px; border-radius: 16px; text-align: center; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(219, 39, 119, 0.25); }
-        .solar-date { font-size: 16px; opacity: 0.9; margin-bottom: 6px; }
-        .lunar-date { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-        .lunar-details { font-size: 13px; opacity: 0.95; background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; display: inline-block; margin-bottom: 12px; }
+        .section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #374151; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Interactive Date Adjuster */
-        .date-adjuster { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .date-adjuster select, .date-adjuster button { padding: 6px 10px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .date-adjuster select { background: white; color: var(--dark-pink); }
-        .date-adjuster button { background: rgba(255,255,255,0.3); color: white; }
-        .date-adjuster button:hover { background: rgba(255,255,255,0.4); }
+        .todo-section { margin-top: 20px; }
+        .todo-input-group { display: flex; gap: 8px; margin-bottom: 16px; }
+        .todo-input { flex: 1; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; }
+        .todo-input:focus { border-color: #2563eb; ring: 2px; }
+        .btn-add { background: #2563eb; color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-add:hover { background: #1d4ed8; }
 
-        /* Special Lunar Badge */
-        .special-badge { background: #fef08a; color: #854d0e; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-top: 8px; }
-
-        /* Section Title */
-        .section-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--dark-pink); display: flex; justify-content: space-between; align-items: center; }
-
-        /* Form Controls */
-        .streak-section { margin-bottom: 20px; }
-        .streak-input-group { display: flex; gap: 8px; margin-bottom: 12px; flex-direction: column; }
-        .input-row { display: flex; gap: 8px; }
-        .input-field { flex: 1; padding: 10px 14px; border: 1px solid var(--light-pink); border-radius: 10px; font-size: 13px; outline: none; background: #fff; }
-        .input-field:focus { border-color: var(--primary-pink); }
-        .file-input-label { display: inline-block; padding: 8px 12px; background: var(--soft-pink); border: 1px dashed var(--primary-pink); border-radius: 8px; font-size: 12px; color: var(--dark-pink); cursor: pointer; text-align: center; }
-        .file-input-label:hover { background: var(--light-pink); }
-        .btn-main { background: var(--primary-pink); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 13px; }
-        .btn-main:hover { background: var(--dark-pink); }
-
-        /* Lists & Items */
-        .streak-list { list-style: none; max-height: 320px; overflow-y: auto; }
-        .streak-item { background: var(--soft-pink); border: 1px solid var(--light-pink); border-radius: 12px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .streak-header { display: flex; justify-content: space-between; align-items: center; }
-        .streak-title { font-weight: 600; font-size: 14px; color: var(--text-main); }
-        .streak-badge { background: var(--primary-pink); color: white; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-        .streak-badge.broken { background: #ef4444; }
-        
-        .proof-img-container { margin-top: 4px; }
-        .proof-img { max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid var(--light-pink); object-fit: cover; display: block; margin-top: 4px; }
-
-        .streak-footer { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #6b7280; margin-top: 4px; }
-        .streak-actions { display: flex; gap: 6px; }
-        .btn-sm { padding: 4px 10px; border-radius: 6px; border: none; font-size: 11px; cursor: pointer; font-weight: 600; }
-        .btn-check { background: #10b981; color: white; }
-        .btn-del { background: #fee2e2; color: #dc2626; }
-
-        /* Future Planning Section */
-        .future-item { background: #fff; border-left: 4px solid var(--primary-pink); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; }
-        .future-year { font-weight: 700; color: var(--primary-pink); font-size: 14px; min-width: 60px; }
-        .future-desc { font-size: 13px; flex: 1; margin-left: 10px; }
-
-        .empty-state { text-align: center; color: #9ca3af; padding: 15px 0; font-size: 13px; }
+        .todo-list { list-style: none; max-height: 300px; overflow-y: auto; }
+        .todo-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+        .todo-item.completed span { text-decoration: line-through; color: #9ca3af; }
+        .todo-left { display: flex; align-items: center; gap: 10px; }
+        .btn-delete { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; }
+        .btn-delete:hover { color: #dc2626; }
+        .empty-state { text-align: center; color: #9ca3af; padding: 20px 0; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Lịch Âm Dương & Chuỗi Kỷ Luật</h1>
-        <div class="subtitle">Có minh chứng ảnh xác thực • Quản lý thời gian & mục tiêu tương lai</div>
+        <h1>Lich</h1>
+        <div class="subtitle">Ứng dụng quản lý lịch cá nhân và chuỗi công việc hiệu quả</div>
 
-        <!-- Tabs Điều Hướng -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('calendar')">📅 Lịch & Âm Lịch</button>
-            <button class="tab-btn" onclick="switchTab('streaks')">🔥 Chuỗi Thói quen</button>
-            <button class="tab-btn" onclick="switchTab('future')">🚀 Kế hoạch Tương lai</button>
-        </div>
-
-        <!-- TAB 1: LỊCH & ÂM LỊCH -->
-        <div id="tab-calendar" class="tab-content active">
-            <div class="calendar-card">
-                <div class="solar-date" id="solar-date-text">Đang tải...</div>
-                <div class="lunar-date" id="lunar-date-text">Đang tải...</div>
-                <div class="lunar-details" id="lunar-details-text">Can Chi / Tiết Khí</div>
-                <div id="special-lunar-badge"></div>
-
-                <!-- Chỉnh sửa trực tiếp ngày/tháng -->
-                <div class="date-adjuster">
-                    <select id="select-day" onchange="adjustDate()"></select>
-                    <select id="select-month" onchange="adjustDate()"></select>
-                    <select id="select-year" onchange="adjustDate()"></select>
-                    <button onclick="resetToday()">Hôm nay</button>
-                </div>
-            </div>
-
-            <div class="section-title"><span>Ghi chú & Ảnh minh chứng trong ngày</span></div>
-            <div class="streak-input-group">
-                <div class="input-row">
-                    <input type="text" id="day-note-input" class="input-field" placeholder="Nhập ghi chú sự kiện/việc làm...">
-                </div>
-                <div class="input-row" style="align-items: center;">
-                    <label class="file-input-label" for="day-img-file">📷 Tải ảnh minh chứng</label>
-                    <input type="file" id="day-img-file" accept="image/*" style="display: none;" onchange="previewDayImage(event)">
-                    <span id="day-file-name" style="font-size: 12px; color: #6b7280; flex: 1;">Chưa chọn ảnh nào</span>
-                    <button class="btn-main" onclick="saveDayNoteWithProof()">Lưu ghi chú & Ảnh</button>
-                </div>
-            </div>
-            <div id="day-note-display" style="font-size: 13px; color: #4b5563; background: var(--soft-pink); padding: 12px; border-radius: 10px; margin-top: 10px;">Chưa có ghi chú hoặc minh chứng cho ngày này.</div>
-        </div>
-
-        <!-- TAB 2: CHUỖI THÓI QUEN (STREAKS - CÓ ẢNH MINH CHỨNG & MẤT NẾU QUÊN) -->
-        <div id="tab-streaks" class="tab-content">
+        <!-- Phần quản lý Chuỗi công việc -->
+        <div class="todo-section">
             <div class="section-title">
-                <span>Quản Lý Chuỗi Kỷ Luật (Streak)</span>
-                <span id="streak-count" style="font-size: 11px; color: var(--dark-pink);">0 chuỗi</span>
+                <span>Danh sách công việc & Chuỗi</span>
+                <span id="task-count" style="font-size: 12px; color: #6b7280;">0 việc</span>
             </div>
-            <div class="subtitle" style="text-align: left; margin-bottom: 12px; color: #dc2626;">⚠️ Lưu ý: Nếu qua ngày mới mà chưa điểm danh kèm ảnh minh chứng, chuỗi sẽ tự động đứt và về 0!</div>
-            
-            <div class="streak-input-group">
-                <div class="input-row">
-                    <input type="text" id="streak-input" class="input-field" placeholder="Tên thói quen/chuỗi (VD: Đọc sách 30 phút)...">
-                    <button class="btn-main" onclick="addStreak()">Thêm chuỗi</button>
-                </div>
+            <div class="todo-input-group">
+                <input type="text" id="task-input" class="todo-input" placeholder="Thêm công việc hoặc chuỗi mới...">
+                <button class="btn-add" id="btn-add-task">Thêm</button>
             </div>
-            <ul class="streak-list" id="streak-list"></ul>
-        </div>
-
-        <!-- TAB 3: KẾ HOẠCH & DỰ TÍNH NĂM SAU -->
-        <div id="tab-future" class="tab-content">
-            <div class="section-title"><span>Dự tính & Mục tiêu các năm tới</span></div>
-            <div class="streak-input-group">
-                <div class="input-row">
-                    <select id="future-year-select" class="input-field" style="max-width: 100px;">
-                        <option value="2027">2027</option>
-                        <option value="2028">2028</option>
-                        <option value="2029">2029</option>
-                        <option value="2030">2030</option>
-                        <option value="2035">2035</option>
-                    </select>
-                    <input type="text" id="future-input" class="input-field" placeholder="Mục tiêu lớn/dự tính trong năm...">
-                    <button class="btn-main" onclick="addFuturePlan()">Thêm</button>
-                </div>
-            </div>
-            <div id="future-list"></div>
-        </div>
-    </div>
-
-    <!-- Modal chọn ảnh cho điểm danh streak -->
-    <div id="streak-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
-        <div style="background:white; padding:20px; border-radius:16px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h3 style="color:var(--dark-pink); margin-bottom:12px; font-size:16px;">📸 Tải ảnh minh chứng điểm danh</h3>
-            <p style="font-size:13px; color:#6b7280; margin-bottom:12px;">Bạn cần cung cấp ảnh minh chứng để xác nhận đã hoàn thành thói quen hôm nay.</p>
-            <input type="file" id="streak-proof-file" accept="image/*" class="input-field" style="margin-bottom:12px;">
-            <div style="display:flex; justify-content:flex-end; gap:8px;">
-                <button class="btn-sm" style="background:#e5e7eb; color:#374151;" onclick="closeStreakModal()">Hủy</button>
-                <button class="btn-main" onclick="confirmCheckIn()">Xác nhận hoàn thành</button>
-            </div>
+            <ul class="todo-list" id="todo-list">
+                <!-- Danh sách công việc -->
+            </ul>
         </div>
     </div>
 
     <script>
-        const selDay = document.getElementById('select-day');
-        const selMonth = document.getElementById('select-month');
-        const selYear = document.getElementById('select-year');
+        let tasks = JSON.parse(localStorage.getItem('lich_tasks') || '[]');
 
-        for(let d=1; d<=31; d++) selDay.innerHTML += `<option value="${d}">Ngày ${d}</option>`;
-        for(let m=1; m<=12; m++) selMonth.innerHTML += `<option value="${m}">Tháng ${m}</option>`;
-        for(let y=2024; y<=2040; y++) selYear.innerHTML += `<option value="${y}">Năm ${y}</option>`;
+        const taskInput = document.getElementById('task-input');
+        const btnAddTask = document.getElementById('btn-add-task');
+        const todoList = document.getElementById('todo-list');
+        const taskCount = document.getElementById('task-count');
 
-        let currentDate = new Date();
+        function renderTasks() {
+            todoList.innerHTML = '';
+            if (tasks.length === 0) {
+                todoList.innerHTML = '<li class="empty-state">Chưa có công việc nào. Hãy thêm mới bên trên!</li>';
+                taskCount.innerText = '0 việc';
+                return;
+            }
 
-        function initSelects(date) {
-            selDay.value = date.getDate();
-            selMonth.value = date.getMonth() + 1;
-            selYear.value = date.getFullYear();
+            taskCount.innerText = `${tasks.length} việc`;
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${task.completed ? 'completed' : ''}`;
+                li.innerHTML = `
+                    <div class="todo-left">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
+                        <span>${escapeHtml(task.text)}</span>
+                    </div>
+                    <button class="btn-delete" onclick="deleteTask(${index})">Xóa</button>
+                `;
+                todoList.appendChild(li);
+            });
+            localStorage.setItem('lich_tasks', JSON.stringify(tasks));
         }
-        initSelects(currentDate);
 
-        function adjustDate() {
-            const d = parseInt(selDay.value);
-            const m = parseInt(selMonth.value) - 1;
-            const y = parseInt(selYear.value);
-            currentDate = new Date(y, m, d);
-            updateCalendarDisplay();
+        function addTask() {
+            const text = taskInput.value.trim();
+            if (!text) return;
+            tasks.push({ text: text, completed: false });
+            taskInput.value = '';
+            renderTasks();
         }
 
-        function resetToday() {
+        window.toggleTask = function(index) {
+            tasks[index].completed = !tasks[index].completed;
+            renderTasks();
+        }
+
+        window.deleteTask = function(index) {
+            tasks.splice(index, 1);
+            renderTasks();
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        btnAddTask.addEventListener('click', addTask);
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTask();
+        });
+
+        renderTasks();
+
+        // Đăng ký Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registered!', reg))
+                    .catch(err => console.log('SW failed', err));
+            });
+        }
+    </script>
+</body>
+</html>
