@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lịch & Chuỗi - Thời khóa biểu tối ưu</title>
+<style>
+  :root {
+    --bg:#0f172a; --bg2:#1e293b; --card:#1e293b; --card2:#334155; --border:#334155;
+    --accent:#22d3ee; --text:#f1f5f9; --muted:#94a3b8;
+    --success:#10b981; --danger:#ef4444; --fire:#f97316; --warn:#f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 50px;line-height:1.5}
+  header{position:sticky;top:0;background:rgba(15,23,42,.95);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);padding:14px 16px;z-index:10}
+  header h1{font-size:18px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav button{flex:1;min-width:70px;padding:8px 10px;border:none;border-radius:10px;
+    background:var(--card);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;
+    transition:all .2s;white-space:nowrap;font-family:inherit}
+  nav button.active{background:var(--accent);color:var(--bg)}
+  main{padding:16px;max-width:800px;margin:0 auto}
+  .view{display:none}.view.active{display:block;animation:fade .2s}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;
+    border:1px solid var(--border);transition:transform .15s}
+  .card.done{border-color:var(--success);
+    background:linear-gradient(135deg,rgba(16,185,129,.08),var(--card))}
+  .card.pastdue{border-color:var(--warn)}
+  .card-header{display:flex;justify-content:space-between;align-items:flex-start;
+    gap:10px;margin-bottom:6px}
+  .card-title{font-size:15px;font-weight:600;flex:1}
+  .card-time{background:var(--bg2);color:var(--accent);padding:2px 8px;
+    border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
+  .card-actions{display:flex;gap:8px;margin-top:10px}
+  button{cursor:pointer;font-family:inherit;border:none;border-radius:10px;
+    font-weight:600;font-size:14px;transition:all .15s;color:var(--text)}
+  .btn{padding:9px 16px;background:var(--card2);color:var(--text)}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--accent);color:var(--bg)}
+  .btn-success{background:var(--success);color:#fff}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-ghost{background:transparent;color:var(--muted);padding:6px 10px}
+  .btn-sm{padding:6px 12px;font-size:13px}
+  .btn-full{width:100%;padding:11px}
+  .empty{text-align:center;padding:30px 20px;color:var(--muted);font-size:14px}
+  .empty .big{font-size:42px;margin-bottom:8px}
+  input,textarea,select{width:100%;padding:11px 13px;background:var(--bg2);
+    border:1px solid var(--border);border-radius:10px;color:var(--text);
+    font-size:15px;font-family:inherit;margin-bottom:10px}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px;font-weight:600}
+  .form-row{display:flex;gap:10px}.form-row>*{flex:1}
+  .streak-badge{display:inline-flex;align-items:center;gap:4px;
+    background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;
+    padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+  .streak-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .thumb{width:50px;height:50px;border-radius:8px;object-fit:cover;
+    border:2px solid var(--success);cursor:pointer}
+  .thumbs{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:4px}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);display:flex;
+    align-items:center;justify-content:center;padding:16px;z-index:100}
+  .modal.hidden{display:none}
+  .modal-content{background:var(--card);border-radius:16px;padding:20px;
+    max-width:400px;width:100%;max-height:90vh;overflow-y:auto;border:1px solid var(--border)}
+  .modal-content h3{margin-bottom:12px;font-size:16px}
+  .preview-img{width:100%;max-height:260px;object-fit:contain;border-radius:10px;
+    background:var(--bg2);margin-bottom:12px;display:block}
+  .file-label{display:block;padding:14px;background:var(--bg2);
+    border:2px dashed var(--border);border-radius:10px;text-align:center;
+    cursor:pointer;margin-bottom:12px;color:var(--muted);font-size:14px}
+  .file-label:hover{border-color:var(--accent);color:var(--accent)}
+  #toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);
+    background:var(--accent);color:var(--bg);padding:10px 18px;border-radius:10px;
+    font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:all .25s;z-index:200;
+    max-width:90vw;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .date-display{font-size:14px;color:var(--muted);margin-bottom:12px;font-weight:500}
+  .section-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;
+    color:var(--muted);margin:18px 0 8px;font-weight:700}
+  .section-title:first-child{margin-top:0}
+  .toggle-row{display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;border-bottom:1px solid var(--border)}
+  .toggle-row:last-child{border:none}
+  .progress-bar{height:6px;background:var(--bg2);border-radius:3px;
+    overflow:hidden;margin-top:6px}
+  .progress-fill{height:100%;
+    background:linear-gradient(90deg,var(--accent),var(--success));transition:width .3s}
+  .week-dots{display:flex;gap:5px;margin-top:8px}
+  .dot{width:24px;height:24px;border-radius:50%;background:var(--card2);
+    display:flex;align-items:center;justify-content:center;font-size:10px;
+    color:var(--muted);font-weight:600}
+  .dot.on{background:var(--fire);color:#fff}
+  .dot.today{box-shadow:0 0 0 2px var(--accent)}
+  
+  /* Calendar Styles */
+  .cal-header{display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:12px;gap:8px;flex-wrap:wrap}
+  .cal-nav{display:flex;align-items:center;gap:6px}
+  .cal-title{font-size:14px;font-weight:700;min-width:105px;text-align:center}
+  .cal-mode{display:flex;gap:2px;background:var(--card);padding:2px;border-radius:8px;border:1px solid var(--border)}
+  .cal-mode button{padding:5px 10px;border-radius:6px;font-size:11px;
+    background:transparent;color:var(--muted)}
+  .cal-mode button.active{background:var(--accent);color:var(--bg)}
+  .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px}
+  .cal-weekdays div{text-align:center;font-size:10px;color:var(--muted);
+    font-weight:700;padding:2px 0}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .cal-cell{background:var(--card);border-radius:6px;padding:4px 3px;min-height:56px;
+    cursor:pointer;border:1px solid transparent;display:flex;flex-direction:column;
+    transition:all .15s}
+  .cal-cell:hover{background:var(--card2)}
+  .cal-cell.other{opacity:.25}
+  .cal-cell.today{border-color:var(--accent)}
+  .cal-cell.selected{background:var(--card2);border-color:var(--accent)}
+  .cal-cell .daynum{font-size:12px;font-weight:600;line-height:1}
+  .cal-cell.today .daynum{color:var(--accent)}
+  .cal-dots{display:flex;flex-wrap:wrap;gap:2px;margin-top:auto;padding-top:2px}
+  .cal-dot{width:5px;height:5px;border-radius:50%;background:var(--accent)}
+  .cal-dot.done{background:var(--success)}
+  .cal-dot.pastdue{background:var(--warn)}
+  .cal-extra{font-size:8px;color:var(--muted);line-height:1}
+  
+  /* Week view */
+  .cal-week{display:grid;grid-template-columns:repeat(7,minmax(48px,1fr));
+    gap:3px;overflow-x:auto;padding-bottom:4px}
+  .cal-week-cell{background:var(--card);border-radius:6px;padding:5px 3px;
+    min-height:120px;cursor:pointer;border:1px solid transparent;
+    display:flex;flex-direction:column;gap:2px}
+  .cal-week-cell.today{border-color:var(--accent)}
+  .cal-week-cell.selected{background:var(--card2);border-color:var(--accent)}
+  .cal-week-cell .daynum{font-size:11px;font-weight:700;text-align:center;
+    padding-bottom:2px;border-bottom:1px solid var(--border);margin-bottom:2px}
+  .cal-week-cell.today .daynum{color:var(--accent)}
+  .cal-week-cell .daynum small{display:block;font-size:8px;color:var(--muted);
+    font-weight:600;margin-top:1px}
+  .task-mini{font-size:9px;padding:2px 3px;background:var(--bg2);
+    border-radius:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    color:var(--text);line-height:1.2}
+  .task-mini.done{background:rgba(16,185,129,.2);text-decoration:line-through;
+    color:var(--muted)}
+  .task-mini.pastdue{background:rgba(245,158,11,.2)}
+  .legend{display:flex;gap:10px;font-size:10px;color:var(--muted);
+    margin:8px 0;flex-wrap:wrap;justify-content:center}
+  .legend span{display:flex;align-items:center;gap:3px}
+  .legend i{width:6px;height:6px;border-radius:50%;display:inline-block}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📅 Lịch & Chuỗi Thói quen</h1>
+  <nav>
+    <button data-tab="today" class="active">Hôm nay</button>
+    <button data-tab="calendar">Lịch</button>
+    <button data-tab="tasks">Công việc</button>
+    <button data-tab="streaks">Chuỗi</button>
+    <button data-tab="settings">Cài đặt</button>
+  </nav>
+</header>
+
+<main>
+  <div id="view-today" class="view active"></div>
+  <div id="view-calendar" class="view"></div>
+  <div id="view-tasks" class="view"></div>
+  <div id="view-streaks" class="view"></div>
+  <div id="view-settings" class="view"></div>
+</main>
+
+<div id="photoModal" class="modal hidden">
+  <div class="modal-content">
+    <h3 id="photoTitle">Hoàn thành</h3>
+    <div id="photoPreviewWrap"></div>
+    <label class="file-label" for="photoInput">📷 Chụp / chọn ảnh chứng minh</label>
+    <input type="file" id="photoInput" accept="image/*" style="display:none">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-full" id="photoCancelBtn">Hủy</button>
+      <button class="btn btn-success btn-full" id="photoSaveBtn" disabled>Lưu lại</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'lich-chuoi-dai-v4';
+
+const timetableTasks = [
+  // --- CHỦ NHẬT (day 0) ---
+  { title: "Lịch dạy học cố định (Khung giờ Sáng)", time: "08:30", dow: 0, note: "Cố định sáng" },
+  { title: "Nấu ăn, Ăn trưa & Vệ sinh bát đũa", time: "11:30", dow: 0, note: "Sinh hoạt" },
+  { title: "Lịch dạy học cố định (Khung giờ Chiều)", time: "12:30", dow: 0, note: "Đến 17:00" },
+  { title: "Tắm rửa, Nấu ăn, Ăn tối & Dọn dẹp", time: "18:30", dow: 0, note: "Sinh hoạt tối" },
+  { title: "Giải trí / Chơi game (1 tiếng xả stress)", time: "20:30", dow: 0, note: "Xả stress" },
+  { title: "Tự học nhẹ / Soạn bài tuần mới", time: "21:30", dow: 0, note: "Chuẩn bị tuần mới" },
+  { title: "Vệ sinh cá nhân, Đánh răng, Chuẩn bị đi ngủ", time: "22:30", dow: 0, note: "" },
+  { title: "Đi ngủ (Chuẩn 11h tối)", time: "23:00", dow: 0, note: "" },
+
+  // --- THỨ 2 (day 1) ---
+  { title: "TRƯỜNG: Tư tưởng HCM (Phòng 314.H1)", time: "08:20", dow: 1, note: "09:20 - 12:00" },
+  { title: "Nấu ăn, Ăn trưa & Vệ sinh bát đũa", time: "11:30", dow: 1, note: "Sinh hoạt" },
+  { title: "Ngủ trưa (1 tiếng)", time: "12:30", dow: 1, note: "12:30 - 13:30" },
+  { title: "Ôn lại bài TTHCM & Giải trí nhẹ", time: "14:00", dow: 1, note: "" },
+  { title: "LÀM THÊM TỦ ĐIỆN (Ca 2: 15:30 - 18:30 | 3h)", time: "15:30", dow: 1, note: "" },
+  { title: "Tắm rửa, Nấu ăn, Ăn tối & Dọn dẹp", time: "18:30", dow: 1, note: "" },
+  { title: "Hoàn thành BT môn trường (BT TTHCM & Mạch điện)", time: "19:30", dow: 1, note: "" },
+  { title: "Giải trí / Chơi game (1 tiếng xả stress)", time: "20:30", dow: 1, note: "" },
+  { title: "Tự học Tiếng Trung HSK & Từ vựng Kỹ thuật", time: "21:30", dow: 1, note: "" },
+  { title: "Vệ sinh cá nhân, Đánh răng, Chuẩn bị đi ngủ", time: "22:30", dow: 1, note: "" },
+  { title: "Đi ngủ (Chuẩn 11h tối)", time: "23:00", dow: 1, note: "" },
+
+  // --- THỨ 3 (day 2) ---
+  { title: "LÀM THÊM TỦ ĐIỆN (Ca 1: 08:30 - 11:30 | 3h)", time: "08:30", dow: 2, note: "" },
+  { title: "Nấu ăn, Ăn trưa & Vệ sinh bát đũa", time: "11:30", dow: 2, note: "" },
+  { title: "Ngủ trưa (1 tiếng)", time: "12:30", dow: 2, note: "12:30 - 13:30" },
+  { title: "Tự học Lập trình PLC & Biến tần", time: "14:00", dow: 2, note: "" },
+  { title: "LÀM THÊM TỦ ĐIỆN (Ca 3: 15:30 - 18:30 | 3h)", time: "15:30", dow: 2, note: "" },
+  { title: "Tắm rửa, Nấu ăn, Ăn tối & Dọn dẹp", time: "18:30", dow: 2, note: "" },
+  { title: "Tự học Điện tử & Vi điều khiển / PLC", time: "19:30", dow: 2, note: "" },
+  { title: "Giải trí / Chơi game (1 tiếng xả stress)", time: "20:30", dow: 2, note: "" },
+  { title: "Tự học Điện CN & Biến tần (Cầu hình & Đấu nối)", time: "21:30", dow: 2, note: "" },
+  { title: "Vệ sinh cá nhân, Đánh răng, Chuẩn bị đi ngủ", time: "22:30", dow: 2, note: "" },
+  { title: "Đi ngủ (Chuẩn 11h tối)", time: "23:00", dow: 2, note: "" },
+
+  // --- THỨ 4 (day 3) ---
+  { title: "TRƯỜNG: GDTC 1 - Bóng chuyền (Phòng NHA TD)", time: "09:20", dow: 3, note: "09:20 - 12:00" },
+  { title: "Ăn trưa nhanh (Nghỉ giữa ca tại trường)", time: "11:30", dow: 3, note: "" },
+  { title: "TRƯỜNG: Mạch điện 2 (Phòng H3.67)", time: "12:30", dow: 3, note: "12:30 - 15:10" },
+  { title: "Hoàn thành BT Mạch điện 2 (Sau ca học 15:10)", time: "14:00", dow: 3, note: "" },
+  { title: "LÀM THÊM TỦ ĐIỆN (Ca 4: 15:30 - 18:30 | 3h)", time: "15:30", dow: 3, note: "" },
+  { title: "Tắm rửa, Nấu ăn, Ăn tối & Dọn dẹp", time: "18:30", dow: 3, note: "" },
+  { title: "Hoàn thành BT các môn trường (Giải tích / Vật lý)", time: "19:30", dow: 3, note: "" },
+  { title: "Giải trí / Chơi game (1 tiếng xả stress)", time: "20:30", dow: 3, note: "" },
+  { title: "Luyện vẽ EPLAN Electric & Thiết kế Tủ điện", time: "21:30", dow: 3, note: "" },
+  { title: "Vệ sinh cá nhân, Đánh răng, Chuẩn bị đi ngủ", time: "22:30", dow: 3, note: "" },
+  { title: "Đi ngủ (Chuẩn 11h tối)", time: "23:00", dow: 3, note: "" },
+
+  // --- THỨ 5 (day 4) ---
+  { title: "Tự học Điện tử & Điện CN Tự động hóa", time: "08:30", dow: 4, note: "" },
+  { title: "Tự học Tiếng Trung (Đọc Manual Kỹ thuật)", time: "10:30", dow: 4, note: "" },
+  { title: "Ăn trưa & Di chuyển đi học (Xuất phát 11:45)", time: "11:30", dow: 4, note: "" },
+  { title: "TRƯỜNG: VLNC 2: Điện tử (Phòng H3.66)", time: "12:30", dow: 4, note: "12:30 - 15:10" },
+  { title: "Hoàn thành BT VLNC 2 (Sau ca học 15:10)", time: "14:00", dow: 4, note: "" },
+  { title: "LÀM THÊM TỦ ĐIỆN (Ca 5: 15:30 - 18:30 | 3h)", time: "15:30", dow: 4, note: "" },
+  { title: "Tắm rửa, Nấu ăn, Ăn tối & Dọn dẹp", time: "18:30", dow: 4, note: "" },
+  { title: "Ôn lại bài VLNC 2 & Bài tập Mạch điện", time: "19:30", dow: 4, note: "" },
+  { title: "Giải trí / Chơi game (1 tiếng xả stress)", time: "20:30", dow: 4, note: "" },
+  { title: "Tự học Điện tử công suất & Thuật toán điều khiển", time: "21:30", dow: 4, note: "" },
+  { title: "Vệ sinh cá nhân, Đánh răng, Chuẩn bị đi ngủ", time: "22:30", dow: 4, note: "" },
+  { title: "Đi ngủ (Chuẩn 11h tối)", time: "23:00", dow: 4, note: "" },
+
+  // --- THỨ 6 (day 5) ---
+  { title: "Ôn bài Giải tích UD (Chuẩn bị học ca chiều)", time: "08:30", dow: 5, note: "" },
+  { title: "Luyện tập EPLAN & Sơ đồ tủ điện", time: "10:30", dow: 5, note: "" },
+  { title: "Nấu ăn, Ăn trưa & Vệ sinh bát đũa", time: "11:30", dow: 5, note: "" },
+  { title: "Ngủ trưa (1 tiếng)", time: "12:30", dow: 5, note: "12:30 - 13:30" },
+  { title: "Di chuyển tới trường (14:45)", time: "14:00", dow: 5, note: "" },
+  { title: "TRƯỜNG: Giải tích ứng dụng KT (Phòng H3.66)", time: "15:20", dow: 5, note: "15:20 - 18:00" },
+  { title: "Tắm rửa, Nấu ăn, Ăn tối & Dọn dẹp", time: "18:30", dow: 5, note: "" },
+  { title: "Hoàn thành BT XSTK & BT Giải tích UD (Sau ca học)", time: "19:30", dow: 5, note: "" },
+  { title: "Giải trí / Chơi game (1 tiếng xả stress)", time: "20:30", dow: 5, note: "" },
+  { title: "Tự học Tiếng Trung (Luyện nghe & Manual)", time: "21:30", dow: 5, note: "" },
+  { title: "Vệ sinh cá nhân, Đánh răng, Chuẩn bị đi ngủ", time: "22:30", dow: 5, note: "" },
+  { title: "Đi ngủ (Chuẩn 11h tối)", time: "23:00", dow: 5, note: "" },
+
+  // --- THỨ 7 (day 6) ---
+  { title: "LÀM THÊM TỦ ĐIỆN (Tiếp tục làm tủ điện)", time: "08:30", dow: 6, note: "Sáng" },
+  { title: "LÀM THÊM TỦ ĐIỆN (Tiếp tục đến 11:30)", time: "10:30", dow: 6, note: "" },
+  { title: "Nấu ăn, Ăn trưa & Vệ sinh bát đũa", time: "11:30", dow: 6, note: "" },
+  { title: "Ngủ trưa (1 tiếng)", time: "12:30", dow: 6, note: "12:30 - 13:30" },
+  { title: "Tự học Tiếng Trung / Giải trí tự do", time: "14:00", dow: 6, note: "" },
+  { title: "Nghỉ ngơi / Chuẩn bị đồ đi dạy", time: "15:30", dow: 6, note: "" },
+  { title: "Tắm rửa, Nấu ăn, Ăn tối & Xuất phát đi dạy", time: "18:30", dow: 6, note: "" },
+  { title: "LỊCH DẠY HỌC CỐ ĐỊNH (Đêm T7 - Bắt đầu 19:00)", time: "19:00", dow: 6, note: "" },
+  { title: "LỊCH DẠY HỌC CỐ ĐỊNH (Đêm T7)", time: "20:30", dow: 6, note: "" },
+  { title: "LỊCH DẠY HỌC CỐ ĐỊNH (Đêm T7)", time: "21:30", dow: 6, note: "" },
+  { title: "Nghỉ ngơi tại nơi dạy học / Vệ sinh đêm", time: "22:30", dow: 6, note: "" }
+];
+
+const defaultState = {
+  tasks: [], streaks: [],
+  settings: { soundOn: true, notificationsOn: false },
+  notified: {}, unlocked: false
+};
+let state = JSON.parse(JSON.stringify(defaultState));
+
+/* ============ Storage ============ */
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw){
+      const p = JSON.parse(raw);
+      state = Object.assign({}, defaultState, p);
+      state.settings = Object.assign({}, defaultState.settings, p.settings||{});
+    } else {
+      initTimetableTasks();
+    }
+  }catch(e){console.error(e);}
+}
+
+function initTimetableTasks(){
+  state.tasks = timetableTasks.map(t => ({
+    id: uid(),
+    title: t.title,
+    time: t.time,
+    repeat: 'weekly',
+    dow: t.dow,
+    note: t.note || '',
+    completedDates: {},
+    createdAt: Date.now()
+  }));
+  save();
+}
+
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){
+    if (e.name === 'QuotaExceededError') {
+      showToast('⚠️ Bộ nhớ đầy! Vui lòng xóa bớt ảnh cũ.');
+    }
+  }
+}
+
+/* ============ Helpers ============ */
+function todayStr(d = new Date()){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'),
+        day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function nowTimeStr(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function timeToMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function formatDateVN(s){ const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; }
+function dayVN(d = new Date()){
+  return ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'][d.getDay()];
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function escapeHtml(s){
+  const d=document.createElement('div'); d.textContent=s; return d.innerHTML;
+}
+
+function tasksForDate(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const dow = d.getDay();
+  return state.tasks.filter(t => {
+    if (t.repeat === 'weekly' || t.dow !== undefined) {
+      return t.dow === dow;
+    }
+    if (t.repeat === 'daily') return true;
+    return t.date === dateStr;
+  });
+}
+
+/* ============ Streak Calculations ============ */
+function currentStreak(s){
+  const c = s.checkins||{};
+  let count=0, d = new Date();
+  if (!c[todayStr(d)]) d.setDate(d.getDate()-1);
+  while (c[todayStr(d)]){ count++; d.setDate(d.getDate()-1); }
+  return count;
+}
+function bestStreak(s){
+  const dates = Object.keys(s.checkins||{}).sort();
+  if (!dates.length) return 0;
+  let best=1, cur=1;
+  for (let i=1;i<dates.length;i++){
+    const diff = Math.round((new Date(dates[i])-new Date(dates[i-1]))/86400000);
+    cur = diff===1 ? cur+1 : 1;
+    if (cur>best) best=cur;
+  }
+  return best;
+}
+
+/* ============ Audio System ============ */
+let audioCtx = null;
+function initAudio(){
+  if (audioCtx) return;
+  try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+}
+function playNotifySound(){
+  if (!state.settings.soundOn || !audioCtx) return;
+  if (audioCtx.state==='suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  const beep = (start, freq) => {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type='sine'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0.0001, now+start);
+    g.gain.exponentialRampToValueAtTime(0.3, now+start+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now+start+0.12);
+    o.start(now+start); o.stop(now+start+0.14);
+  };
+  beep(0,880); beep(0.2,1100);
+}
+
+/* ============ Notification & Auto Date Check ============ */
+setInterval(checkMidnightAndNotifications, 15000);
+let lastCheckedDate = todayStr();
+
+function checkMidnightAndNotifications(){
+  const currentDate = todayStr();
+  if (currentDate !== lastCheckedDate) {
+    lastCheckedDate = currentDate;
+    render();
+  }
+
+  const nowMin = timeToMin(nowTimeStr());
+  for (const k of Object.keys(state.notified)){
+    if (!k.endsWith(currentDate)) delete state.notified[k];
+  }
+  const todayTasks = tasksForDate(currentDate);
+  todayTasks.forEach(task => {
+    if (task.completedDates && task.completedDates[currentDate]) return;
+    const key = `${task.id}:${currentDate}`;
+    if (state.notified[key]) return;
+    const taskMin = timeToMin(task.time);
+    if (nowMin >= taskMin && nowMin <= taskMin+1){
+      state.notified[key] = true; save();
+      if (state.settings.notificationsOn && 'Notification' in window && Notification.permission==='granted'){
+        try{ new Notification('⏰ Đến giờ: '+task.title, { body:`Lúc ${task.time}`, tag:'task-'+task.id }); }catch(e){}
+      }
+      playNotifySound();
+      showToast(`⏰ Đến giờ: ${task.title}`);
+    }
+  });
+}
+
+/* ============ Toast Notification ============ */
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+/* ============ Optimized Image Compression ============ */
+function compressImage(file, maxW=400, q=0.5){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onerror = reject;
+    r.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const scale = Math.min(1, maxW/Math.max(img.width,img.height));
+        const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+        const c = document.createElement('canvas');
+        c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg', q));
+      };
+      img.src = e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+let photoCtx = null, photoData = null;
+function openPhotoModal(type, id, title){
+  photoCtx = { type, id, title }; photoData = null;
+  initAudio();
+  if (audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+  document.getElementById('photoTitle').textContent = 'Hoàn thành: '+title;
+  document.getElementById('photoPreviewWrap').innerHTML = '';
+  document.getElementById('photoSaveBtn').disabled = true;
+  document.getElementById('photoInput').value = '';
+  document.getElementById('photoModal').classList.remove('hidden');
+}
+function closePhotoModal(){
+  document.getElementById('photoModal').classList.add('hidden');
+  photoCtx = null; photoData = null;
+}
+document.getElementById('photoInput').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try{
+    photoData = await compressImage(f);
+    document.getElementById('photoPreviewWrap').innerHTML =
+      `<img src="${photoData}" class="preview-img" alt="preview">`;
+    document.getElementById('photoSaveBtn').disabled = false;
+  }catch(err){ showToast('Không đọc được ảnh'); }
+});
+document.getElementById('photoCancelBtn').onclick = closePhotoModal;
+document.getElementById('photoSaveBtn').onclick = () => {
+  if (!photoData || !photoCtx) return;
+  const today = todayStr();
+  if (photoCtx.type==='task'){
+    const t = state.tasks.find(x=>x.id===photoCtx.id);
+    if (t){ t.completedDates = t.completedDates||{}; t.completedDates[today] = { photo:photoData, at:Date.now() }; }
+  } else {
+    const s = state.streaks.find(x=>x.id===photoCtx.id);
+    if (s){ s.checkins = s.checkins||{}; s.checkins[today] = { photo:photoData, at:Date.now() }; }
+  }
+  save(); closePhotoModal(); render();
+  playNotifySound();
+  showToast('✅ Đã điểm danh thành công!');
+};
+
+/* ============ Calendar Management ============ */
+let calState = {
+  mode: 'month',
+  viewYear: new Date().getFullYear(),
+  viewMonth: new Date().getMonth(),
+  viewDate: new Date(),
+  selectedDate: todayStr()
+};
+
+function calPrev(){
+  if (calState.mode==='month'){
+    if (calState.viewMonth===0){ calState.viewMonth=11; calState.viewYear--; }
+    else calState.viewMonth--;
+  } else {
+    const d = new Date(calState.viewDate);
+    d.setDate(d.getDate()-7);
+    calState.viewDate = d;
+  }
+  renderCalendar();
+}
+function calNext(){
+  if (calState.mode==='month'){
+    if (calState.viewMonth===11){ calState.viewMonth=0; calState.viewYear++; }
+    else calState.viewMonth++;
+  } else {
+    const d = new Date(calState.viewDate);
+    d.setDate(d.getDate()+7);
+    calState.viewDate = d;
+  }
+  renderCalendar();
+}
+function setCalMode(m){
+  calState.mode = m;
+  if (m==='week') calState.viewDate = new Date(calState.selectedDate+'T00:00:00');
+  renderCalendar();
+}
+function selectDay(key){
+  calState.selectedDate = key;
+  renderCalendar();
+}
+function goToday(){
+  const n = new Date();
+  calState.viewYear = n.getFullYear();
+  calState.viewMonth = n.getMonth();
+  calState.viewDate = n;
+  calState.selectedDate = todayStr();
+  renderCalendar();
+}
+function quickAddForDate(dateKey){
+  const title = prompt('Tên công việc mới:');
+  if (!title || !title.trim()) return;
+  const time = prompt('Thời gian (HH:MM):', '08:00') || '08:00';
+  state.tasks.push({
+    id: uid(), title: title.trim(), time,
+    repeat: 'once', date: dateKey, note: '',
+    completedDates: {}, createdAt: Date.now()
+  });
+  save(); render();
+  showToast('✅ Đã thêm công việc');
+}
+
+/* ============ Render Calendar ============ */
+function renderCalendar(){
+  const el = document.getElementById('view-calendar');
+  const todayKey = todayStr();
+  let title, cells;
+
+  if (calState.mode === 'month'){
+    const { viewYear, viewMonth } = calState;
+    title = `Tháng ${viewMonth+1}/${viewYear}`;
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    const lastDay = new Date(viewYear, viewMonth+1, 0);
+    let startOffset = firstDay.getDay()-1;
+    if (startOffset < 0) startOffset = 6;
+
+    cells = [];
+    for (let i=startOffset; i>0; i--){
+      cells.push({ date: new Date(viewYear, viewMonth, 1-i), other: true });
+    }
+    for (let d=1; d<=lastDay.getDate(); d++){
+      cells.push({ date: new Date(viewYear, viewMonth, d), other: false });
+    }
+    while (cells.length % 7 !== 0){
+      const last = cells[cells.length-1].date;
+      const next = new Date(last); next.setDate(next.getDate()+1);
+      cells.push({ date: next, other: true });
+    }
+  } else {
+    const anchor = new Date(calState.viewDate);
+    const dow = anchor.getDay();
+    const monOffset = dow===0 ? -6 : 1-dow;
+    const monday = new Date(anchor); monday.setDate(anchor.getDate()+monOffset);
+    const sunday = new Date(monday); sunday.setDate(sunday.getDate()+6);
+    title = `${formatDateVN(todayStr(monday))} – ${formatDateVN(todayStr(sunday))}`;
+    cells = [];
+    for (let i=0;i<7;i++){
+      const d = new Date(monday); d.setDate(monday.getDate()+i);
+      cells.push({ date: d, other: false });
+    }
+  }
+
+  const nowMin = timeToMin(nowTimeStr());
+  let html = `<div class="cal-header">
+    <div class="cal-nav">
+      <button class="btn btn-sm" onclick="calPrev()">‹</button>
+      <div class="cal-title">${title}</div>
+      <button class="btn btn-sm" onclick="calNext()">›</button>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center">
+      <button class="btn btn-sm" onclick="goToday()">Hôm nay</button>
+      <div class="cal-mode">
+        <button class="${calState.mode==='month'?'active':''}" onclick="setCalMode('month')">Tháng</button>
+        <button class="${calState.mode==='week'?'active':''}" onclick="setCalMode('week')">Tuần</button>
+      </div>
+    </div>
+  </div>`;
+
+  if (calState.mode === 'month'){
+    html += `<div class="cal-weekdays">
+      <div>T2</div><div>T3</div><div>T4</div><div>T5</div><div>T6</div><div>T7</div><div>CN</div>
+    </div><div class="cal-grid">`;
+
+    cells.forEach(c => {
+      const key = todayStr(c.date);
+      const tasks = tasksForDate(key);
+      const pastDue = tasks.filter(t => !(t.completedDates&&t.completedDates[key]) && nowMin > timeToMin(t.time) && key < todayKey);
+      const done = tasks.filter(t => t.completedDates && t.completedDates[key]);
+      const pending = tasks.filter(t => !(t.completedDates && t.completedDates[key]));
+
+      let dots = '';
+      done.slice(0, 3).forEach(() => dots += '<div class="cal-dot done"></div>');
+      pending.slice(0, 3).forEach(t => {
+        const cls = pastDue.includes(t) ? 'pastdue' : '';
+        dots += `<div class="cal-dot ${cls}"></div>`;
+      });
+      const total = tasks.length;
+      if (total > 3) dots += `<span class="cal-extra">+${total-3}</span>`;
+
+      html += `<div class="cal-cell ${c.other?'other':''} ${key===todayKey?'today':''} ${key===calState.selectedDate?'selected':''}" onclick="selectDay('${key}')">
+        <div class="daynum">${c.date.getDate()}</div>
+        <div class="cal-dots">${dots}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div class="cal-week">`;
+    cells.forEach(c => {
+      const key = todayStr(c.date);
+      const tasks = tasksForDate(key).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+      const dayLabel = ['CN','T2','T3','T4','T5','T6','T7'][c.date.getDay()];
+      html += `<div class="cal-week-cell ${key===todayKey?'today':''} ${key===calState.selectedDate?'selected':''}" onclick="selectDay('${key}')">
+        <div class="daynum">${c.date.getDate()}<small>${dayLabel}</small></div>
+        ${tasks.slice(0,4).map(t => {
+          const isDone = t.completedDates && t.completedDates[key];
+          const isPast = !isDone && nowMin > timeToMin(t.time) && key < todayKey;
+          return `<div class="task-mini ${isDone?'done':(isPast?'pastdue':'')}" title="${escapeHtml(t.title)}">${t.time} ${escapeHtml(t.title)}</div>`;
+        }).join('')}
+        ${tasks.length>4 ? `<div class="cal-extra" style="text-align:center">+${tasks.length-4}</div>` : ''}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div class="legend">
+    <span><i style="background:var(--success)"></i>Hoàn thành</span>
+    <span><i style="background:var(--accent)"></i>Sắp tới</span>
+    <span><i style="background:var(--warn)"></i>Quá hạn</span>
+  </div>`;
+
+  html += renderDayDetail(calState.selectedDate);
+  el.innerHTML = html;
+}
+
+function renderDayDetail(dateKey){
+  const tasks = tasksForDate(dateKey).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const d = new Date(dateKey+'T00:00:00');
+  const dayLabel = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'][d.getDay()];
+  let html = `<div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>${dayLabel}, ${formatDateVN(dateKey)}</span>
+    <button class="btn btn-sm btn-primary" onclick="quickAddForDate('${dateKey}')">+ Thêm</button>
+  </div>`;
+
+  if (!tasks.length){
+    html += `<div class="empty" style="padding:15px"><p style="font-size:13px">Không có lịch công việc ngày này</p></div>`;
+  } else {
+    tasks.forEach(t => {
+      const done = t.completedDates && t.completedDates[dateKey];
+      html += `<div class="card ${done?'done':''}" style="margin-bottom:8px;padding:10px">
+        <div class="card-header" style="margin-bottom:4px">
+          <div class="card-title" style="font-size:14px">${done?'✅ ':''}${escapeHtml(t.title)}</div>
+          <div class="card-time" style="font-size:11px">${t.time}</div>
+        </div>
+        ${t.note ? `<div style="font-size:12px;color:var(--muted);margin-bottom:4px">${escapeHtml(t.note)}</div>` : ''}
+        ${done
+          ? (done.photo ? `<div class="thumbs"><img src="${done.photo}" class="thumb" style="width:40px;height:40px"></div>`
+                        : `<div style="font-size:11px;color:var(--success)">✓ Đã hoàn thành</div>`)
+          : `<button class="btn btn-success btn-sm" onclick="openTaskPhoto('${t.id}')">📷 Check-in</button>`
+        }
+      </div>`;
+    });
+  }
+  return html;
+}
+
+/* ============ Core Rendering Views ============ */
+function render(){
+  renderToday();
+  renderCalendar();
+  renderTasks();
+  renderStreaks();
+  renderSettings();
+}
+
+function last7Days(){
+  const arr = [];
+  for (let i=6;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    arr.push(d);
+  }
+  return arr;
+}
+function weekDots(checkins){
+  return `<div class="week-dots">${last7Days().map(d => {
+    const key = todayStr(d), on = !!checkins[key], today = key===todayStr();
+    return `<div class="dot ${on?'on':''} ${today?'today':''}" title="${formatDateVN(key)}">${d.getDate()}</div>`;
+  }).join('')}</div>`;
+}
+
+function renderToday(){
+  const el = document.getElementById('view-today');
+  const today = todayStr(), now = new Date();
+  const nowMin = timeToMin(nowTimeStr());
+  const todayTasks = tasksForDate(today).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+
+  let html = `<div class="date-display"><span>📆 ${dayVN(now)}, ${formatDateVN(today)}</span></div>`;
+
+  const doneTasks = todayTasks.filter(t => t.completedDates && t.completedDates[today]).length;
+  const doneStreaks = state.streaks.filter(s => s.checkins && s.checkins[today]).length;
+  const total = todayTasks.length + state.streaks.length;
+  const done = doneTasks + doneStreaks;
+  
+  if (total > 0){
+    const pct = Math.round(done/total*100);
+    html += `<div class="card" style="padding:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)">
+        <span>Tiến độ hôm nay</span><span style="font-weight:600;color:var(--accent)">${done}/${total} (${pct}%)</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }
+
+  if (todayTasks.length){
+    html += `<div class="section-title">⏰ Thời khóa biểu hôm nay</div>`;
+    todayTasks.forEach(t => {
+      const d = t.completedDates && t.completedDates[today];
+      const pastDue = !d && nowMin > timeToMin(t.time);
+      html += `<div class="card ${d?'done':(pastDue?'pastdue':'')}">
+        <div class="card-header">
+          <div class="card-title">${d?'✅ ':''}${escapeHtml(t.title)}</div>
+          <div class="card-time">${t.time}</div>
+        </div>
+        ${t.note ? `<div style="font-size:13px;color:var(--muted);margin-bottom:6px">${escapeHtml(t.note)}</div>` : ''}
+        ${d ? `
+          <div style="font-size:12px;color:var(--success)">✓ Hoàn thành lúc ${new Date(d.at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</div>
+          ${d.photo ? `<div class="thumbs"><img src="${d.photo}" class="thumb"></div>` : ''}
+        ` : `
+          <div class="card-actions">
+            <button class="btn btn-success btn-full" onclick="openTaskPhoto('${t.id}')">📷 Hoàn thành (Gửi ảnh)</button>
+          </div>
+        `}
+      </div>`;
+    });
+  }
+
+  if (state.streaks.length){
+    html += `<div class="section-title">🔥 Chuỗi thói quen</div>`;
+    state.streaks.forEach(s => {
+      const d = s.checkins && s.checkins[today];
+      const cur = currentStreak(s), best = bestStreak(s), totalC = Object.keys(s.checkins||{}).length;
+      html += `<div class="card ${d?'done':''}">
+        <div class="card-header">
+          <div class="card-title">${escapeHtml(s.title)}${s.goal ? ` <span style="color:var(--muted);font-weight:400;font-size:13px">(${escapeHtml(s.goal)})</span>` : ''}</div>
+          <span class="streak-badge">🔥 ${cur}</span>
+        </div>
+        <div class="streak-meta">Kỷ lục: ${best} • Tổng: ${totalC} ngày</div>
+        ${weekDots(s.checkins||{})}
+        ${d ? `
+          <div style="font-size:12px;color:var(--success);margin-top:6px">✓ Đã check-in hôm nay</div>
+          ${d.photo ? `<div class="thumbs"><img src="${d.photo}" class="thumb"></div>` : ''}
+        ` : `
+          <div class="card-actions" style="margin-top:10px">
+            <button class="btn btn-primary btn-full" onclick="openStreakPhoto('${s.id}')">🔥 Check-in ngay</button>
+          </div>
+        `}
+      </div>`;
+    });
+  }
+
+  if (!todayTasks.length && !state.streaks.length){
+    html += `<div class="empty"><div class="big">🌱</div>
+      <p>Hôm nay không có lịch trình nào.</p>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderTasks(){
+  const el = document.getElementById('view-tasks');
+  const today = todayStr();
+
+  let html = `<div class="card">
+    <h3 style="margin-bottom:12px;font-size:15px">➕ Thêm công việc mới</h3>
+    <input type="text" id="taskTitle" placeholder="Tên công việc" maxlength="80">
+    <div class="form-row">
+      <div><label>Giờ</label><input type="time" id="taskTime" value="${nowTimeStr()}"></div>
+      <div><label>Lặp lại</label>
+        <select id="taskRepeat">
+          <option value="daily">Hằng ngày</option>
+          <option value="weekly">Hằng tuần (Theo T2-CN)</option>
+          <option value="once">Một lần</option>
+        </select>
+      </div>
+    </div>
+    <div id="onceDateWrap" style="display:none">
+      <label>Ngày thực hiện</label>
+      <input type="date" id="taskDate" value="${today}">
+    </div>
+    <input type="text" id="taskNote" placeholder="Ghi chú thêm (tùy chọn)" maxlength="120">
+    <button class="btn btn-primary btn-full" onclick="addTask()">Thêm công việc</button>
+  </div>
+
+  <div class="section-title">📋 Danh sách lịch trình (${state.tasks.length})</div>`;
+
+  if (!state.tasks.length){
+    html += `<div class="empty"><div class="big">📭</div><p>Chưa có công việc nào</p></div>`;
+  } else {
+    const sorted = [...state.tasks].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    sorted.forEach(t => {
+      const dayNames = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+      const repeatLabel = t.repeat === 'weekly' ? `🗓️ ${dayNames[t.dow]}` : (t.repeat === 'daily' ? '🔁 Hằng ngày' : `📅 ${formatDateVN(t.date)}`);
+      html += `<div class="card">
+        <div class="card-header">
+          <div class="card-title">${escapeHtml(t.title)}</div>
+          <div class="card-time">${t.time}</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">
+          ${repeatLabel} ${t.note ? ' • '+escapeHtml(t.note) : ''}
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="deleteTask('${t.id}')">🗑️ Xóa</button>
+        </div>
+      </div>`;
+    });
+  }
+  el.innerHTML = html;
+
+  const sel = document.getElementById('taskRepeat');
+  if (sel) sel.addEventListener('change', e => {
+    document.getElementById('onceDateWrap').style.display = e.target.value==='once' ? 'block' : 'none';
+  });
+}
+
+function renderStreaks(){
+  const el = document.getElementById('view-streaks');
+  let html = `<div class="card">
+    <h3 style="margin-bottom:12px;font-size:15px">➕ Tạo chuỗi thói quen mới</h3>
+    <input type="text" id="streakTitle" placeholder="Tên thói quen (VD: Tập thể dục)" maxlength="80">
+    <input type="text" id="streakGoal" placeholder="Mục tiêu cụ thể" maxlength="80">
+    <button class="btn btn-primary btn-full" onclick="addStreak()">Tạo chuỗi</button>
+  </div>
+  <div class="section-title">🔥 Chuỗi thói quen (${state.streaks.length})</div>`;
+
+  if (!state.streaks.length){
+    html += `<div class="empty"><div class="big">🔥</div><p>Chưa có chuỗi thói quen nào</p></div>`;
+  } else {
+    state.streaks.forEach(s => {
+      const cur = currentStreak(s), best = bestStreak(s);
+      const total = Object.keys(s.checkins||{}).length;
+      const today = todayStr();
+      const d = s.checkins && s.checkins[today];
+      html += `<div class="card">
+        <div class="card-header">
+          <div class="card-title">${escapeHtml(s.title)}${s.goal ? ` <span style="color:var(--muted);font-weight:400;font-size:13px">(${escapeHtml(s.goal)})</span>` : ''}</div>
+          <span class="streak-badge">🔥 ${cur} ngày</span>
+        </div>
+        <div class="streak-meta">Kỷ lục: ${best} ngày • Tổng: ${total} ngày ${d?'• ✅ Đã check-in':''}</div>
+        ${weekDots(s.checkins||{})}
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="deleteStreak('${s.id}')">🗑️ Xóa</button>
+        </div>
+      </div>`;
+    });
+  }
+  el.innerHTML = html;
+}
+
+function renderSettings(){
+  const el = document.getElementById('view-settings');
+  el.innerHTML = `
+    <div class="card">
+      <h3 style="margin-bottom:12px;font-size:15px">⚙️ Tùy chỉnh</h3>
+      <div class="toggle-row">
+        <div><div style="font-weight:600;font-size:14px">🔔 Âm thanh nhắc nhở</div>
+          <div style="font-size:12px;color:var(--muted)">Phát âm thanh khi đến giờ</div></div>
+        <input type="checkbox" id="soundToggle" ${state.settings.soundOn?'checked':''} style="width:auto;transform:scale(1.4);margin:0">
+      </div>
+      <div class="toggle-row">
+        <div><div style="font-weight:600;font-size:14px">🔓 Kích hoạt âm thanh</div>
+          <div style="font-size:12px;color:var(--muted)">Nhấn để mở khóa âm thanh</div></div>
+        <button class="btn btn-sm" onclick="unlockAudio()">${state.unlocked?'✅ Đã mở':'Mở khóa'}</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:10px;font-size:15px">💾 Dữ liệu Thời khóa biểu</h3>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="resetTimetable()">🔄 Khôi phục TKB gốc</button>
+        <button class="btn btn-sm btn-danger" onclick="resetAll()">⚠️ Xóa tất cả</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('soundToggle').addEventListener('change', e => {
+    state.settings.soundOn = e.target.checked;
+    save();
+  });
+}
+
+/* ============ Actions Handler ============ */
+function openTaskPhoto(id){
+  const t = state.tasks.find(x=>x.id===id);
+  if (t) openPhotoModal('task', id, t.title);
+}
+function openStreakPhoto(id){
+  const s = state.streaks.find(x=>x.id===id);
+  if (s) openPhotoModal('streak', id, s.title);
+}
+function addTask(){
+  const title = document.getElementById('taskTitle').value.trim();
+  const time = document.getElementById('taskTime').value;
+  const repeat = document.getElementById('taskRepeat').value;
+  const date = document.getElementById('taskDate').value;
+  const note = document.getElementById('taskNote').value.trim();
+  if (!title) return showToast('Vui lòng nhập tên công việc');
+  if (!time) return showToast('Vui lòng chọn thời gian');
+  state.tasks.push({ id: uid(), title, time, repeat,
+    date: repeat==='once' ? date : null, note,
+    completedDates: {}, createdAt: Date.now() });
+  save(); render(); showToast('✅ Đã thêm công việc thành công');
+}
+function deleteTask(id){
+  if (!confirm('Bạn có chắc chắn muốn xóa?')) return;
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  save(); render();
+}
+function addStreak(){
+  const title = document.getElementById('streakTitle').value.trim();
+  const goal = document.getElementById('streakGoal').value.trim();
+  if (!title) return showToast('Vui lòng nhập tên thói quen');
+  state.streaks.push({ id: uid(), title, goal, checkins: {}, createdAt: Date.now() });
+  save(); render(); showToast('🔥 Đã tạo chuỗi thói quen mới');
+}
+function deleteStreak(id){
+  if (!confirm('Xóa chuỗi này?')) return;
+  state.streaks = state.streaks.filter(s => s.id !== id);
+  save(); render();
+}
+function unlockAudio(){
+  initAudio();
+  if (audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+  state.unlocked = true; save();
+  playNotifySound(); renderSettings();
+  showToast('🔊 Đã mở khóa âm thanh');
+}
+function resetTimetable(){
+  if (!confirm('Khôi phục lại toàn bộ thời khóa biểu gốc từ ảnh?')) return;
+  initTimetableTasks();
+  render();
+  showToast('✅ Đã khôi phục TKB chuẩn');
+}
+function resetAll(){
+  if (!confirm('Xóa toàn bộ dữ liệu?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = JSON.parse(JSON.stringify(defaultState));
+  initTimetableTasks();
+  render(); showToast('Đã làm mới ứng dụng');
+}
+
+/* ============ Navigation Tabs ============ */
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+tab));
+    if (tab === 'calendar') {
+      calState.viewDate = new Date();
+      renderCalendar();
+    }
+  });
+});
+
+document.addEventListener('click', e => {
+  if (e.target.matches('img.thumb')) viewPhoto(e.target.src);
+});
+
+['click','touchstart','keydown'].forEach(evt => {
+  document.addEventListener(evt, () => {
+    if (!state.unlocked){
+      initAudio();
+      if (audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+      state.unlocked = true; save();
+    }
+  }, { once: true });
+});
+
+/* ============ Application Initialization ============ */
+load();
+render();
+setTimeout(checkMidnightAndNotifications, 1000);
+</script>
+</body>
+</html>
