@@ -1,12 +1,27 @@
 {
-  "background_color": "#ffffff",
-  "description": "lich-chuoi-app",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "Lich Thoi Khoa Bieu",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "Lich",
-  "start_url": "/",
-  "theme_color": "#ffffff"
+  "categories": ["Shelter", "Kitchen"],
+  "items": [
+    { 
+      "id": "1", 
+      "label": "Tent and footprint", 
+      "category": "Shelter", 
+      "checked": false,
+      "icon": "tent"
+    },
+    { 
+      "id": "2", 
+      "label": "Sleeping bags", 
+      "sublines": ["Rated to 0°C"], 
+      "category": "Shelter", 
+      "checked": false,
+      "icon": "bed"
+    },
+    { 
+      "id": "3", 
+      "label": "Camp stove and fuel", 
+      "category": "Kitchen", 
+      "checked": false,
+      "icon": "fire"
+    }
+  ]
 }
